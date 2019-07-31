@@ -1,2 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>My Personal Blog</title><link href="https://jpalladino84.github.io/" rel="alternate"></link><link href="https://jpalladino84.github.io/feeds/all.atom.xml" rel="self"></link><id>https://jpalladino84.github.io/</id><updated>2019-06-21T01:53:00-04:00</updated><entry><title>My super title</title><link href="https://jpalladino84.github.io/foo-post.html" rel="alternate"></link><published>2019-06-21T01:53:00-04:00</published><updated>2019-06-21T01:53:00-04:00</updated><author><name>Jeff Palladino</name></author><id>tag:jpalladino84.github.io,2019-06-21:/foo-post.html</id><summary type="html">&lt;p&gt;Test Foo&lt;/p&gt;</summary><content type="html">&lt;p&gt;This site is a work in progress...&lt;/p&gt;</content><category term="pelican"></category><category term="publishing"></category></entry></feed>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>My Personal Blog</title><link href="https://jpalladino84.github.io/" rel="alternate"></link><link href="https://jpalladino84.github.io/feeds/all.atom.xml" rel="self"></link><id>https://jpalladino84.github.io/</id><updated>2019-07-31T01:53:00-04:00</updated><entry><title>I write crap code, and so can you!</title><link href="https://jpalladino84.github.io/crap-code-post.html" rel="alternate"></link><published>2019-07-31T01:53:00-04:00</published><updated>2019-07-31T01:53:00-04:00</updated><author><name>Jeff Palladino</name></author><id>tag:jpalladino84.github.io,2019-07-31:/crap-code-post.html</id><summary type="html">&lt;p&gt;My take on computer programming&lt;/p&gt;</summary><content type="html">&lt;p&gt;I am a software developer and I write crap code. If you are a software developer or you are looking
+to be a software developer, than you already write or will write crap code too!&lt;/p&gt;
+&lt;p&gt;At this point you are probably saying something like:
+"But wait I don't write crap code! My code is tested and peer reviewed..."
+Well you just said it yourself. The code you write has tests and is peer reviewed. If you wrote perfect, great code
+then you would not need to write tests or have it peer reviewed, right? Have you ever written code that didn't have
+tests or wasn't peer reviewed? Did it work first try?&lt;/p&gt;
+&lt;p&gt;As software developers and future software developers let's all be honest with each other and just say we all write
+crap code and that will never change. We will always need to test are code and have it peer reviewed at the very
+minimum. I say this out of love too. Once we all admit this the better we will get at writing clean, stable,
+and maintaible code.&lt;/p&gt;
+&lt;p&gt;That's it. We all write crap code and so do you!&lt;/p&gt;
+&lt;p&gt;Thanks for reading!&lt;/p&gt;</content><category term="pelican"></category><category term="publishing"></category></entry></feed>
