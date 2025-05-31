@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+		<title>My Thoughts... &mdash; How to Build a High-Performance Kubernetes Ingress for 1M+ RPS</title>
+		<meta charset="utf-8" />
+		<link rel="profile" href="http://gmpg.org/xfn/11" />
+		<link rel="stylesheet" type="text/css" href="https://blog.palladino.me/theme/css/style.css" />
+		<link rel='stylesheet' id='oswald-css'  href='http://fonts.googleapis.com/css?family=Oswald&#038;ver=3.3.2' type='text/css' media='all' />
+		<style type="text/css">
+			body.custom-background { background-color: #f5f5f5; }
+		</style>
+		<link rel="alternate" type="application/atom+xml"
+			title="My Thoughts... — Flux Atom"
+			href="https://blog.palladino.me/" /> 
+		<!--[if lte IE 8]><script src="https://blog.palladino.me/theme/js/html5shiv.js"></script><![endif]-->
+</head>
+
+<body class="home blog custom-background " >
+	<div id="container">
+		<div id="header">
+				<h1 id="site-title"><a href="https://blog.palladino.me">My Thoughts...</a></h1>
+		</div><!-- /#banner -->
+		
+		<div id="menu">
+			<div class="menu-navigation-container">
+				<ul id="menu-navigation" class="menu">
+						<li class="menu-item menu-item-type-post_type menu-item-object-page"><a href="https://blog.palladino.me/category/ai-2027.html">AI 2027</a></li>
+						<li class="menu-item menu-item-type-post_type menu-item-object-page"><a href="https://blog.palladino.me/category/devops.html">DevOps</a></li>
+						<li class="active" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="https://blog.palladino.me/category/infrastructure.html">Infrastructure</a></li>
+
+				</ul>
+			</div> <!--/#menu-navigation-container-->
+		</div><!-- /#menu -->
+		
+		<div class="page-title">
+		</div>
+	
+		<div id="contents">
+
+<div class="post type-post status-publish format-standard hentry category-general" id="post">
+	<div class="entry-meta">
+		<div class="date"><a href="https://blog.palladino.me/kubernetes-ingress-scaling.html">Sat 31 May 2025</a></div>
+		<span class="byline">By <a href="https://blog.palladino.me/author/jeff-palladino.html">Jeff Palladino</a></span>
+			<span class="cat-links"><a href="https://blog.palladino.me/category/infrastructure.html" title="View all posts in Infrastructure" rel="category tag">Infrastructure</a></span>
+	</div> <!-- /#entry-meta -->
+	<div class="main">
+		<h2 class="entry-title">
+			<a href="https://blog.palladino.me/kubernetes-ingress-scaling.html" title="Permalink to How to Build a High-Performance Kubernetes Ingress for 1M+ RPS" rel="bookmark">How to Build a High-Performance Kubernetes Ingress for 1M+ RPS</a>
+		</h2>
+		<div class="entry-content">
+			<h2>Introduction</h2>
+<p>Handling millions of requests per second (RPS) through a Kubernetes cluster is not just a matter of adding replicas—it demands deliberate optimization of ingress design, connection handling, autoscaling, and network I/O. This post distills key strategies we used to scale an HAProxy-based ingress to consistently handle 1M+ RPS on Azure Kubernetes Service (AKS).</p>
+<hr>
+<h2>Ingress Stack Overview</h2>
+<p>We used the following stack:
+- <strong>HAProxy</strong> (with custom config map)
+- <strong>Azure Kubernetes Service (AKS)</strong>
+- <strong>Horizontal Pod Autoscaler (HPA)</strong>
+- <strong>Node pools tuned for low-latency</strong>
+- <strong>Prometheus + Grafana</strong> for observability</p>
+<hr>
+<h2>HAProxy Configuration Essentials</h2>
+<p>In <code>ConfigMap</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">maxconn-global</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;100000&quot;</span>
+<span class="nt">maxconn-server</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;10000&quot;</span>
+<span class="nt">nbthread</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;4&quot;</span>
+<span class="nt">timeout-client</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50s</span>
+<span class="nt">timeout-connect</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
+<span class="nt">timeout-queue</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
+<span class="nt">timeout-http-request</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="nt">timeout-http-keep-alive</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1s</span>
+<span class="nt">ssl-options</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no-sslv3 no-tls-tickets no-tlsv10 no-tlsv11</span>
+<span class="nt">ssl-ciphers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256</span>
+</code></pre></div>
+
+<p>These settings ensure fast connection handling, low latency, and strict SSL policies.</p>
+<hr>
+<h2>Scaling Strategy</h2>
+<ul>
+<li>Use <strong>Dedicated Node Pools</strong> for ingress controllers (separate from app workloads)</li>
+<li>Set <strong>PodDisruptionBudgets</strong> to avoid draining ingress under load</li>
+<li>Use <strong><code>topologySpreadConstraints</code></strong> or <code>podAntiAffinity</code> to prevent all ingress pods landing on one node</li>
+</ul>
+<h3>HPA Tweaks</h3>
+<ul>
+<li>Custom metric: <code>sum(rate(requests[1m]))</code></li>
+<li>Stabilization window: 30s</li>
+<li>Cooldown: 60s</li>
+</ul>
+<p>Ensure metrics server and Prometheus Adapter are tuned to avoid lag in metrics reporting.</p>
+<hr>
+<h2>Connection and Network Limits</h2>
+<p>AKS nodes have system limits:
+- <strong>conntrack table</strong>: Default is ~131072. You'll need to tune this with <code>sysctl</code> or use node images with extended limits
+- <strong>NIC throughput</strong>: Scale with Standard_Dv4/Dv5 node series
+- Watch out for <code>ConntrackFull</code> and <code>ReadOnlyFilesystem</code> errors on nodes under stress</p>
+<hr>
+<h2>Observability</h2>
+<p>Key metrics to monitor:
+- RPS per pod
+- Latency P95/P99
+- Dropped connections
+- conntrack usage</p>
+<p>Recommended tools:
+- <strong>Prometheus</strong>: with <code>haproxy_exporter</code>
+- <strong>Grafana</strong>: custom dashboards with alerts
+- <strong>Kubernetes Events</strong>: monitor for pod eviction or failed scheduling</p>
+<hr>
+<h2>Bonus: Simulate Load Without Overcommit</h2>
+<p>Use <code>wrk</code>, <code>vegeta</code>, or <code>k6</code> to simulate realistic traffic:</p>
+<div class="highlight"><pre><span></span><code>wrk<span class="w"> </span>-t12<span class="w"> </span>-c1000<span class="w"> </span>-d60s<span class="w"> </span>--latency<span class="w"> </span>https://your-ingress.example.com
+</code></pre></div>
+
+<p>This helps avoid triggering false autoscaler signals while still stressing the ingress layer.</p>
+<hr>
+<h2>Conclusion</h2>
+<p>Building a high-throughput ingress isn’t just about more pods—it’s about smarter topology, system-level tuning, and proactive observability. With the right HAProxy configuration and node awareness, Kubernetes ingress can scale to serve millions of requests per second reliably.</p>
+<p>Let me know if you'd like a Helm chart, Terraform config, or Azure-specific node tuning guide to go with this.</p>
+		</div> <!--/#entry-content-->
+    		<span class="tag-links"><strong>Tagged</strong>
+ <a href="https://blog.palladino.me/tag/aks.html" rel="tag">aks</a>,  <a href="https://blog.palladino.me/tag/haproxy.html" rel="tag">haproxy</a>,  <a href="https://blog.palladino.me/tag/high-performance.html" rel="tag">high-performance</a>,  <a href="https://blog.palladino.me/tag/ingress.html" rel="tag">ingress</a>,  <a href="https://blog.palladino.me/tag/kubernetes.html" rel="tag">kubernetes</a>,  <a href="https://blog.palladino.me/tag/scaling.html" rel="tag">scaling</a>    		</span>
+	</div> <!--/#main-->
+</div>  <!--/#post-->
+
+		</div>
+		
+		<div id="footer">
+			<p>Powered by <a href="http://getpelican.com">Pelican</a>, theme by <a href="http://bunnyman.info">tBunnyMan</a>.</p>
+		</div><!-- /#footer -->
+	</div><!-- /#container -->
+	<div style="display:none"></div>
+</body>
+</html>

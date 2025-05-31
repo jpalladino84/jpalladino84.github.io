@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>My Thoughts... - DevOps</title><link href="https://blog.palladino.me/" rel="alternate"></link><link href="https://blog.palladino.me/feeds/devops.atom.xml" rel="self"></link><id>https://blog.palladino.me/</id><updated>2025-05-31T00:00:00-06:00</updated><entry><title>How to Route Traffic Across Azure and Linode Using Equinix ExpressRoute</title><link href="https://blog.palladino.me/azure-linode-expressroute.html" rel="alternate"></link><published>2025-05-31T00:00:00-06:00</published><updated>2025-05-31T00:00:00-06:00</updated><author><name>Jeff Palladino</name></author><id>tag:blog.palladino.me,2025-05-31:/azure-linode-expressroute.html</id><summary type="html">&lt;p&gt;A step-by-step engineering guide to configuring cross-cloud traffic between Azure and Linode using Equinix ExpressRoute and BGP.&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;Multi-cloud networking is complex, but necessary when you want to optimize cost, performance, or geographic redundancy. In this guide, I’ll walk through how I routed traffic from Azure to Linode through Equinix ExpressRoute, including the challenges, missteps, and lessons learned.&lt;/p&gt;
+&lt;p&gt;This setup enables low-latency, private, and reliable data transfer between Azure and Linode via Equinix’s fabric and BGP configuration.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Architecture Overview&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Azure&lt;/strong&gt;: Virtual Network (VNet) with ExpressRoute Gateway&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Equinix&lt;/strong&gt;: Virtual Device and Fabric connection&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Linode&lt;/strong&gt;: LKE (Linode Kubernetes Engine) with a private subnet&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Protocol&lt;/strong&gt;: BGP over VLAN&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Key Goals:&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Avoid internet hops&lt;/li&gt;
+&lt;li&gt;Enable deterministic routing&lt;/li&gt;
+&lt;li&gt;Support redundancy&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2&gt;Step 1: Provision ExpressRoute in Azure&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;Create a &lt;strong&gt;Virtual Network Gateway&lt;/strong&gt; with &lt;code&gt;ExpressRoute&lt;/code&gt; SKU&lt;/li&gt;
+&lt;li&gt;Link it to a subnet within your Azure VNet&lt;/li&gt;
+&lt;li&gt;Create an &lt;strong&gt;ExpressRoute Circuit&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Choose &lt;strong&gt;Equinix&lt;/strong&gt; as the provider and set the peering location&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;📌 Tip: Make sure you don’t enable Microsoft peering if you’re only routing to Linode. Use &lt;strong&gt;Private peering&lt;/strong&gt;.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Step 2: Create the Equinix Fabric Connection&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;Log into the &lt;a href="https://fabric.equinix.com/"&gt;Equinix Fabric Portal&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Create a &lt;strong&gt;connection&lt;/strong&gt; between Azure and a virtual device (Cisco CSR or Palo Alto works well)&lt;/li&gt;
+&lt;li&gt;Assign VLAN tags to each side:&lt;/li&gt;
+&lt;li&gt;A-side: Azure (e.g., 10.10.1.1/30)&lt;/li&gt;
+&lt;li&gt;Z-side: Linode (e.g., 10.10.2.1/30)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;💡 Watch for &lt;strong&gt;overlapping subnets&lt;/strong&gt; between Azure and Linode! This caused initial route flaps.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Step 3: Configure Linode for BGP&lt;/h2&gt;
+&lt;p&gt;Linode doesn’t natively support BGP, so you’ll need to:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Deploy a router VM (e.g., VyOS or FRRouting)&lt;/li&gt;
+&lt;li&gt;Assign it a static IP on your private Linode subnet&lt;/li&gt;
+&lt;li&gt;Configure BGP neighbor with the Equinix Z-side&lt;/li&gt;
+&lt;li&gt;Advertise Linode CIDRs&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr&gt;
+&lt;h2&gt;Step 4: Exchange Routes with Azure&lt;/h2&gt;
+&lt;p&gt;In Azure:
+- Use &lt;code&gt;Get-AzExpressRouteCircuit&lt;/code&gt; to confirm peering is active
+- Check learned routes via &lt;code&gt;Get-AzRouteTable&lt;/code&gt;
+- Ensure route tables are associated with subnets in your VNet&lt;/p&gt;
+&lt;p&gt;From Linode:
+- Ping test Azure private IPs
+- Run &lt;code&gt;traceroute&lt;/code&gt; to confirm Equinix path is taken&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2&gt;Common Pitfalls&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;❌ &lt;strong&gt;Missing BGP ASN on one side&lt;/strong&gt; — causes peering rejection&lt;/li&gt;
+&lt;li&gt;❌ &lt;strong&gt;Incorrect VLAN tags&lt;/strong&gt; — traffic drops silently&lt;/li&gt;
+&lt;li&gt;❌ &lt;strong&gt;Unroutable return path&lt;/strong&gt; — remember to update &lt;strong&gt;both&lt;/strong&gt; route tables&lt;/li&gt;
+&lt;li&gt;❌ &lt;strong&gt;UDP/ICMP tests failing&lt;/strong&gt; — ExpressRoute doesn’t forward all protocol types by default&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2&gt;Bonus: Test End-to-End Application Traffic&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;Deploy a sample app in Linode’s LKE&lt;/li&gt;
+&lt;li&gt;Use Azure Container App or App Gateway to hit the endpoint&lt;/li&gt;
+&lt;li&gt;Use &lt;code&gt;tcpdump&lt;/code&gt; to confirm traffic path&lt;/li&gt;
+&lt;li&gt;Add latency monitoring via Prometheus or Grafana&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr&gt;
+&lt;h2&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;Routing traffic between Azure and Linode via Equinix ExpressRoute is absolutely possible—but requires surgical attention to BGP, subnets, and physical routing topology.&lt;/p&gt;
+&lt;p&gt;Once working, the benefits are huge: consistent performance, lower latency, and private, secure inter-cloud communication.&lt;/p&gt;
+&lt;p&gt;Let me know if you’d like a Terraform version of this configuration or a reusable BGP starter template!&lt;/p&gt;</content><category term="DevOps"></category><category term="azure"></category><category term="expressroute"></category><category term="linode"></category><category term="equinix"></category><category term="bgp"></category><category term="hybrid cloud"></category></entry></feed>
