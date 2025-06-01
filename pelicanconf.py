@@ -21,7 +21,7 @@ TRANSLATION_FEED_ATOM = None
 AUTHOR_FEED_ATOM = None
 AUTHOR_FEED_RSS = None
 
-THEME = "/Users/jeff/git/pelican-themes/chunk"
+THEME = "theme/chunk"
 
 # Blogroll
 LINKS = (
