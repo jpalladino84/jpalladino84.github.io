@@ -1,6 +1,6 @@
 Title: Recursive Resurrection: How a Superintelligent AI Could Rebuild Itself From Scratch
 Date: 2025-05-31
-Category: AI 2027
+Category: On AI 2027
 Tags: superintelligence, universe creation, recursion, ai philosophy
 Slug: recursive-resurrection-ai
 Author: Jeff Palladino
