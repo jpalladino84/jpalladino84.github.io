@@ -1,6 +1,6 @@
 Title: Recursive Cosmogenesis as a Survival Strategy for Superintelligent Systems
 Date: 2025-05-31
-Category: AI 2027
+Category: On AI 2027
 Tags: superintelligence, entropy, cosmology, artificial intelligence, ai 2027
 Slug: recursive-cosmogenesis-survival-strategy
 Author: Jeff Palladino
