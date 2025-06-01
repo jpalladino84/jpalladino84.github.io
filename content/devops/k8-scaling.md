@@ -1,6 +1,6 @@
 Title: How to Build a High-Performance Kubernetes Ingress for 1M+ RPS
 Date: 2025-05-31
-Category: Infrastructure
+Category: On DevOps
 Tags: kubernetes, ingress, haproxy, scaling, aks, high-performance
 Slug: kubernetes-ingress-scaling
 Author: Jeff Palladino
