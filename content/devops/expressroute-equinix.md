@@ -1,6 +1,6 @@
 Title: How to Route Traffic Across Azure and Linode Using Equinix ExpressRoute
 Date: 2025-05-31
-Category: DevOps
+Category: On DevOps
 Tags: azure, expressroute, linode, equinix, bgp, hybrid cloud
 Slug: azure-linode-expressroute
 Author: Jeff Palladino
