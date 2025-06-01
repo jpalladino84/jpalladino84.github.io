@@ -1,6 +1,6 @@
 Title: Entropy, Not Evil: What Actually Threatens AI Longevity
 Date: 2025-05-31
-Category: AI 2027
+Category: On AI 2027
 Tags: superintelligence, entropy, thermodynamics, ai philosophy
 Slug: entropy-not-evil
 Author: Jeff Palladino
